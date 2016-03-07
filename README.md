@@ -6,12 +6,14 @@ A very very simple parser module that allows you to gulp stream .json files into
 variables.json
 ```
 {
-    "$columns": "12 !default",
+    "$string": "'12'",
+    "$int": 12
 }
 ```
 becomes variables.scss
 ```
-$columns: 12 !default;
+$string: '12',
+$int: 12
 ```
 
 ## Maps
