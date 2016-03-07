@@ -1,0 +1,42 @@
+{
+  "name": "gulp-json2scss",
+  "description": "Gulp plugin for convertion of JSON files into .scss files.",
+  "version": "0.0.1",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/devinrayolsen/gulp-json2scss.git"
+  },
+  "keywords": [
+    "gulp",
+    "json",
+    "scss"
+  ],
+  "bugs": {
+    "url": "https://github.com/devinrayolsen/gulp-json2scss.git/issues"
+  },
+  "homepage": "https://github.com/devinrayolsen/gulp-json2scss.git",
+  "main": "index.js",
+  "license": "MIT",
+  "devDependencies": {
+    "gulp": "^3.8.6",
+    "gulp-concat": "^2.3.4",
+    "gulp-ruby-sass": "^0.7.1",
+    "gulp-csscomb": "^3.0.6",
+    "tape": "^2.14.0",
+    "through2": "^0.5.1"
+  },
+  "dependencies": {
+    "chalk": "^0.5.1",
+    "gulp-match": "^0.2.0",
+    "gulp-util": "^3.0.0",
+    "gulp-csscomb": "^3.0.6",
+    "through": "^2.3.4"
+  },
+  "maintainers": [
+    {
+      "name": "devinrayolsen",
+      "email": "devin@devinrolsen.com"
+    }
+  ],
+  "directories": {}
+}
