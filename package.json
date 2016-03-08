@@ -1,7 +1,7 @@
 {
   "name": "gulp-json2scss",
   "description": "Gulp plugin for convertion of JSON files into .scss files.",
-  "version": "0.0.4",
+  "version": "0.0.41",
   "repository": {
     "type": "git",
     "url": "https://github.com/devinrayolsen/gulp-json2scss.git"
