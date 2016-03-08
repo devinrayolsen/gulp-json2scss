@@ -2,26 +2,26 @@ var through = require('through'),
 	chalk = require('chalk'),
 	gulpmatch = require('gulp-match'),
 	path = require('path'),
-	gutil = require('gulp-util');
+	gutil = require('gulp-util'),
+	beautify = require('js-beautify').css;
 
 var firstCharacterIsNumber = /^[0-9]/;
-
 module.exports = function(options) {
 	options = options || {};
 	options.delim = options.delim || '-';
-	options.sass = !!options.sass;
-	options.eol = options.sass ? '' : ';';
+	options.eol = ';';
 	options.emptyKeyFirst = options.emptyKeyFirst === undefined ? true : !!options.emptyKeyFirst;
 	options.skipDelimAtEmptyKeys = options.skipDelimAtEmptyKeys === undefined ? true : !!options.skipDelimAtEmptyKeys;
-	options.groupRelated = options.groupRelated === undefined ? true : !!options.groupRelated;
 	options.ignoreJsonErrors = !!options.ignoreJsonErrors;
 	options.firstCharacter = options.firstCharacter || '_';
 	options.prefixFirstNumericCharacter = options.prefixFirstNumericCharacter === undefined ? true : options.prefixFirstNumericCharacter;
 
-	return through(processJSON);
+	return through(ProcessJSON);
 	
-	function processJSON(file) {
-		var parsedJSON, sass;
+	function ProcessJSON(file) {
+		var ParsedJSON;
+		var SCSSVar = [];
+
 		// if it does not have a .json suffix, ignore the file
 		if (!gulpmatch(file,'**/*.json')) {
 			this.push(file);
@@ -30,7 +30,7 @@ module.exports = function(options) {
 
 		// load the JSON
 		try {
-			parsedJSON = JSON.parse(file.contents);
+			ParsedJSON = JSON.parse(file.contents);
 		} catch (e) {
 			if (options.ignoreJsonErrors) {
 				console.log(chalk.red('[gulp-json-scss]') + ' Invalid JSON in ' + file.path + '. (Continuing.)');
@@ -42,23 +42,20 @@ module.exports = function(options) {
 		}
 
 		// process the JSON
-		var sassVariables = [];
-
-		RecursiveLoad(parsedJSON, '', 
-			function (assignmentString) {
-				if(assignmentString === '' && sassVariables[sassVariables.length - 1] === ''){
+		RecursiveLoad(ParsedJSON, '', 
+			function (string) {
+				if(string === '' && SCSSVar[SCSSVar.length - 1] === ''){
 					return;
 				}
-				if(typeof options.interceptor === 'function' && assignmentString !== '') {
-					assignmentString = assignmentString.split(':');
-					assignmentString = options.interceptor(assignmentString[0], assignmentString[1]);
+				if(typeof options.interceptor === 'function' && string !== '') {
+					string = string.split(':');
+					string = options.interceptor(string[0], string[1]);
 				}
-				sassVariables.push(assignmentString);
+				SCSSVar.push(string);
 			}
 		);
-		sass = sassVariables.join('\n').trimRight();
-		file.contents = Buffer(sass);
-		file.path = gutil.replaceExtension(file.path, options.sass ? '.sass' : '.scss');
+		file.contents = Buffer(beautify(SCSSVar.join('\n'), { indent_size: 1, indent_char:"	" }));
+		file.path = gutil.replaceExtension(file.path, '.scss');
 		this.push(file);
 	}
 
@@ -75,7 +72,6 @@ module.exports = function(options) {
 				if(options.emptyKeyFirst && key === '') {
 					continue;
 				}
-
 				CollectVariables(obj, path, callback, key);
 			}
 		}
@@ -83,7 +79,7 @@ module.exports = function(options) {
 
 	function CollectVariables(obj, path, callback, key) {
 		var val = obj[key];
-
+		var collection;
 		// sass variables cannot begin with a number
 		if (path === '' && firstCharacterIsNumber.exec(key) && options.prefixFirstNumericCharacter) {
 			key = options.firstCharacter + key;
@@ -97,43 +93,35 @@ module.exports = function(options) {
 		if (typeof val !== 'object') {
 			callback(key + ': ' + val + options.eol);
 		} else {
-			var collection = BuildObject(val, key, 0);
-			callback(collection+((key.charAt(0) == '$')?options.eol:''));
-			// group related sass variables by newline
-			if (options.groupRelated) {
-				callback('');
-			}
+			collection = BuildObject(val, key, 0);
+			callback(collection);
 		}
 	}
 
 	function BuildObject(object, key, lvl, type){
 		var length = ObjectLength(object);
-		var collection = '';
+		var collection = end = prop = delimiter = '';
+
 		if(typeof type == 'undefined'){
 			type = (key.charAt(0) == '$')?'mapping':'selector';
+			end = (key.charAt(0) == '$')?(options.eol):'';
 		}
-
-		for(var prop in object){
-			if(typeof object[prop] === 'object'){
+		for(prop in object){
+			if(typeof object[prop] === 'object'){ //we have more levels
 				collection += BuildObject(object[prop], prop, lvl++, type);
-			}else{
-				var delimiter = (type == 'mapping')? (length > 1)?',\n\r':'':';\n\r';
-				if(prop.charAt(0) == '@'){
-					collection += prop+' '+object[prop]+delimiter;
-				}else{
-					collection += prop+': '+object[prop]+delimiter;
-				}
+			}else{ //reached no further nesting levels
+				delimiter = (type == 'mapping')? (length > 1)?',':'':';';
+				collection += prop+((prop.charAt(0) == '@')?' ':': ')+object[prop] + delimiter;
 			}
 			length--;			
 		}
 
 		if(type == 'selector'){
-			return key + ' {\n\r' + collection +'\n\r}\n\r';
+			return key + ' {'+ collection +'}'+end;
 		}else if(type == 'mapping'){
-			return key + ': (\n\r' + collection +'\n\r)\n\r';
+			return key + ': (' + collection +')'+end;
 		}
 	}
-
 	function ObjectLength( object ) {
 		var length = 0;
 		for( var key in object ) {

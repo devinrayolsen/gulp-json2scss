@@ -23,14 +23,16 @@
     "gulp-ruby-sass": "^0.7.1",
     "gulp-csscomb": "^3.0.6",
     "tape": "^2.14.0",
-    "through2": "^0.5.1"
+    "through2": "^0.5.1",
+    "js-beautify": "^1.6.2"
   },
   "dependencies": {
     "chalk": "^0.5.1",
     "gulp-match": "^0.2.0",
     "gulp-util": "^3.0.0",
     "gulp-csscomb": "^3.0.6",
-    "through": "^2.3.4"
+    "through": "^2.3.4",
+    "js-beautify": "^1.6.2"
   },
   "maintainers": [
     {
